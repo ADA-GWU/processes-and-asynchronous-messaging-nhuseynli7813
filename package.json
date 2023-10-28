@@ -1,7 +1,9 @@
 {
   "type": "module",
   "scripts": {
-    "generate-docker-compose": "node generateDockerCompose.js"
+    "generate-docker-compose": "node generateDockerCompose.js",
+    "send": "node sender.js",
+    "read": "node reader.js"
   },
   "dependencies": {
     "dotenv": "^16.3.1",

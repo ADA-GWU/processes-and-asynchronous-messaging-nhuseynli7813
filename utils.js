@@ -23,6 +23,8 @@ export const getConfig = async () => {
 
     return config;
   } catch (error) {
-    return null;
+    console.error("Failed to read config");
   }
 };
+
+export const getRandomIndex = (n) => Math.floor(Math.random() * n);

@@ -36,6 +36,34 @@ import { getConfig } from "./utils.js";
       };
     });
 
+    yaml.services["sender"] = {
+      build: {
+        context: ".",
+      },
+      env_file: [".env"],
+      networks: {
+        nishana: {
+          ipv4_address: config.sender,
+        },
+      },
+      tty: true,
+      depends_on: config.hosts.map((_, index) => `db${index + 1}`),
+    };
+
+    yaml.services["reader"] = {
+      build: {
+        context: ".",
+      },
+      env_file: [".env"],
+      networks: {
+        nishana: {
+          ipv4_address: config.reader,
+        },
+      },
+      tty: true,
+      depends_on: config.hosts.map((_, index) => `db${index + 1}`),
+    };
+
     await writeFile("docker-compose.yml", stringify(yaml));
   }
 })();
