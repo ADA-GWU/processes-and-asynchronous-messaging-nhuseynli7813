@@ -81,19 +81,28 @@ const updateLatestAvailableMessage = async (host) => {
 if (isMainThread) {
   try {
     let message = await prompt();
+    let workers = {};
 
     while (message !== "n") {
       const availableMessages = await Promise.allSettled(
         config.hosts.map(
           (host) =>
-            new Promise(async (resolve, reject) => {
-              try {
-                const count = await getAvailableMessagesCount(host);
+            new Promise((resolve, reject) => {
+              const worker = new Worker(__filename, {
+                workerData: { host },
+              });
 
-                resolve({ host, count });
-              } catch {
-                reject({ host });
-              }
+              workers[host] = worker;
+
+              worker.postMessage({ host });
+
+              worker.on("message", (result) => {
+                resolve(result);
+              });
+
+              worker.on("error", (error) => {
+                reject(error);
+              });
             })
         )
       );
@@ -120,23 +129,22 @@ if (isMainThread) {
         process.exit(0);
       }
 
-      let hostIndex = getRandomIndex(config.hosts.length);
+      let workerIndex = getRandomIndex(config.hosts.length);
 
-      while (!hasAvailableMessages.includes(config.hosts[hostIndex])) {
-        hostIndex = getRandomIndex(config.hosts.length);
+      while (!hasAvailableMessages.includes(config.hosts[workerIndex])) {
+        workerIndex = getRandomIndex(config.hosts.length);
       }
 
-      const worker = new Worker(__filename, {
-        workerData: { host: config.hosts[hostIndex] },
-      });
-
       console.log(
-        `Host ${config.hosts[hostIndex]} selected. Reading a message...`
+        `Host '${config.hosts[workerIndex]}' selected. Reading a message...`
       );
 
-      worker.postMessage(config.hosts[hostIndex]);
+      workers[config.hosts[workerIndex]].postMessage({
+        host: config.hosts[workerIndex],
+        update: true,
+      });
 
-      const result = await waitWorker(worker);
+      const result = await waitWorker(workers[config.hosts[workerIndex]]);
 
       console.log(result);
 
@@ -149,11 +157,17 @@ if (isMainThread) {
     throw error;
   }
 } else {
-  parentPort.on("message", async (host) => {
-    const result = await updateLatestAvailableMessage(host);
+  parentPort.on("message", async ({ host, update }) => {
+    if (!update) {
+      const count = await getAvailableMessagesCount(host);
 
-    parentPort.postMessage(
-      `Sender '${result.sender_name}' sent '${result.message}' at time '${result.sent_time}'.`
-    );
+      parentPort.postMessage({ host, count });
+    } else {
+      const result = await updateLatestAvailableMessage(host);
+
+      parentPort.postMessage(
+        `Sender '${result.sender_name}' sent '${result.message}' at time '${result.sent_time}'.`
+      );
+    }
   });
 }

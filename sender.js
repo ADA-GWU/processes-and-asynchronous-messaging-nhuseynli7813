@@ -6,6 +6,12 @@ import { client, getConfig, getRandomIndex } from "./utils.js";
 
 dotenv.config();
 
+const config = await getConfig();
+
+if (!config) {
+  process.exit(1);
+}
+
 const __filename = fileURLToPath(import.meta.url);
 
 const rl = readline.createInterface({
@@ -46,35 +52,31 @@ const send = async (host, message) => {
 };
 
 if (isMainThread) {
-  const config = await getConfig();
+  try {
+    let message = await prompt();
 
-  if (config) {
-    try {
-      let message = await prompt();
+    while (message !== "exit") {
+      const workers = config.hosts.map(
+        (host) => new Worker(__filename, { workerData: { host } })
+      );
+      const workerIndex = getRandomIndex(config.hosts.length);
+      const worker = workers[workerIndex];
 
-      while (message !== "exit") {
-        const workers = config.hosts.map(
-          (host) => new Worker(__filename, { workerData: { host } })
-        );
-        const workerIndex = getRandomIndex(config.hosts.length);
-        const worker = workers[workerIndex];
+      console.log(`Host '${config.hosts[workerIndex]}' selected.`);
 
-        console.log(`Host ${config.hosts[workerIndex]} selected.`);
+      worker.postMessage(message);
 
-        worker.postMessage(message);
+      const result = await waitWorker(worker);
 
-        const result = await waitWorker(worker);
+      console.log(result);
 
-        console.log(result);
-
-        message = await prompt();
-      }
-
-      rl.close();
-      process.exit(0);
-    } catch (error) {
-      throw error;
+      message = await prompt();
     }
+
+    rl.close();
+    process.exit(0);
+  } catch (error) {
+    throw error;
   }
 } else {
   parentPort.on("message", async (message) => {
