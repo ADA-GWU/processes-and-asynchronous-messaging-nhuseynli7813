@@ -1,8 +1,14 @@
 ## Setup
 
-### 1. Install Docker
+### 1. Installation
 
 Refer to the [official website of Docker](https://www.docker.com/) to install **Docker** on your machine.
+
+Install the required packages in the project root:
+
+```bash
+npm run install
+```
 
 ### 2. Configure Environment
 
