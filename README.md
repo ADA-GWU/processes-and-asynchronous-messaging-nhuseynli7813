@@ -4,6 +4,21 @@
 
 Refer to the [official website of Docker](https://www.docker.com/) to install **Docker** on your machine.
 
+Verify the installation:
+
+```bash
+docker -v
+```
+
+Refer to the [official website of Node.js](https://nodejs.org/) to install **Node.js** on your machine.
+
+Verify the installation:
+
+```bash
+node -v
+npm -v
+```
+
 Install the required packages in the project root:
 
 ```bash
