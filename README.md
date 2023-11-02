@@ -7,7 +7,7 @@ Refer to the [official website of Docker](https://www.docker.com/) to install **
 Install the required packages in the project root:
 
 ```bash
-npm  install
+npm install
 ```
 
 ### 2. Configure Environment
