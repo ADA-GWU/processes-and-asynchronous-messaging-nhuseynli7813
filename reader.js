@@ -38,7 +38,7 @@ const getAvailableMessagesCount = async (host) => {
     await Client.connect();
 
     const result = await Client.query(
-      `SELECT COUNT(*) FROM ASYNC_MESSAGES WHERE RECEIVED_TIME IS NULL`
+      `SELECT COUNT(*) FROM ASYNC_MESSAGES WHERE RECEIVED_TIME IS NULL AND SENDER_NAME != '${process.env.NAME}'`
     );
 
     return result.rows[0].count;
@@ -60,7 +60,7 @@ const updateLatestAvailableMessage = async (host) => {
     const {
       rows: [{ record_id }],
     } = await Client.query(
-      `SELECT * FROM ASYNC_MESSAGES WHERE RECEIVED_TIME IS NULL ORDER BY SENT_TIME DESC LIMIT 1 FOR UPDATE`
+      `SELECT * FROM ASYNC_MESSAGES WHERE RECEIVED_TIME IS NULL AND SENDER_NAME != '${process.env.NAME}' ORDER BY SENT_TIME DESC LIMIT 1 FOR UPDATE`
     );
 
     const result = await Client.query(

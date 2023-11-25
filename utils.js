@@ -13,6 +13,9 @@ export const client = (host) =>
     user: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB,
+    ssl: {
+      rejectUnauthorized: false,
+    },
   });
 
 export const getConfig = async () => {
